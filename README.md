@@ -30,7 +30,8 @@ Deploy to Test Environment
         ↓
 Run DAST Scan
         ↓
-Step 1 — Create Git Repository
+ 
+ Step 1 — Create Git Repository
 
 Create repository in:
 
@@ -45,7 +46,9 @@ project/
  ├── Dockerfile
  ├── Jenkinsfile
  └── .github/workflows/
-Step 2 — Install Required Tools
+
+ 
+ Step 2 — Install Required Tools
 Install Docker
 
 Docker
@@ -59,6 +62,8 @@ Install Jenkins
 Jenkins
 
 sudo apt install openjdk-17-jdk -y
+
+
 Step 3 — Install Code Scanning Tools
 A. Semgrep (SAST)
 pip install semgrep
@@ -106,6 +111,8 @@ http://localhost:9000
 Default login:
 
 admin/admin
+
+
 Step 4 — Create CI/CD Pipeline
 Example Using Jenkins
 
@@ -159,6 +166,8 @@ pipeline {
         }
     }
 }
+
+
 Step 5 — GitHub Actions Automation
 
 Create:
@@ -200,6 +209,8 @@ jobs:
 
     - name: Run Gitleaks
       uses: gitleaks/gitleaks-action@v2
+
+
 Step 6 — Configure Failure Conditions
 
 Pipeline should fail if:
@@ -212,12 +223,16 @@ Example:
 
 semgrep scan . --error
 trivy fs --exit-code 1 --severity HIGH,CRITICAL .
+
+
 Step 7 — Generate Reports
 
 Generate JSON reports:
 
 semgrep scan --json > semgrep-report.json
 trivy fs --format json -o trivy-report.json .
+
+
 Step 8 — Email / Slack Notifications
 
 Example Jenkins:
@@ -229,6 +244,8 @@ post {
         body: 'Security vulnerabilities found'
     }
 }
+
+
 Step 9 — Deploy Only if Scan Passes
 
 Flow:
@@ -240,84 +257,4 @@ Scan Code
 No Critical Issues?
    ↓
 YES → Deploy
-NO  → Stop Pipeline
-Step 10 — Advanced Automation
-
-You can add:
-
-Feature	Tool
-SAST	Semgrep / SonarQube
-DAST	OWASP ZAP
-Container Scan	Trivy
-IaC Scan	Checkov
-Secret Scan	Gitleaks
-Dependency Scan	Snyk
-SBOM	Syft
-Compliance	OpenSCAP
-Real-Time Enterprise Workflow
-Git Push
-   ↓
-GitHub Actions / Jenkins
-   ↓
-SAST Scan
-   ↓
-Dependency Scan
-   ↓
-Secrets Scan
-   ↓
-Docker Build
-   ↓
-Container Scan
-   ↓
-DAST Scan
-   ↓
-Kubernetes Deploy
-   ↓
-Monitoring & Alerts
-Important DevOps Concepts
-SAST
-
-Static Application Security Testing
-Scans source code before deployment.
-
-DAST
-
-Dynamic Application Security Testing
-Scans running application.
-
-Shift Left Security
-
-Security testing early in development.
-
-Quality Gate
-
-Stops deployment if vulnerabilities exist.
-
-Recommended Project for Practice
-
-Create:
-
-Python Flask App
-Dockerfile
-Jenkins Pipeline
-GitHub Actions
-Semgrep Scan
-Trivy Scan
-OWASP ZAP Scan
-Best Practice
-Scan on every pull request
-Block critical vulnerabilities
-Store reports in artifacts
-Use least privilege access
-Automate notifications
-Scan Docker images before deployment
-Scan Kubernetes manifests
-Tools Summary
-Category	Tool
-CI/CD	Jenkins, GitHub Actions
-SAST	Semgrep, SonarQube
-DAST	OWASP ZAP
-Container Scan	Trivy
-Secret Scan	Gitleaks
-IaC Scan	Checkov
-Dependency Scan	Snyk
+NO  → Stop Pipeline. 
