@@ -1,0 +1,116 @@
+import boto3
+
+REGION = "ap-south-1"
+KEY_NAME = "my-key"          # Replace with your key pair
+AMI_ID = "ami-0f58b397bc5c1f2e8"   # Replace with valid AMI if needed
+
+ec2 = boto3.resource('ec2', region_name=REGION)
+
+print("Creating VPC...")
+
+# Create VPC
+vpc = ec2.create_vpc(
+    CidrBlock='10.0.0.0/16'
+)
+
+vpc.wait_until_available()
+
+vpc.modify_attribute(
+    EnableDnsSupport={'Value': True}
+)
+
+vpc.modify_attribute(
+    EnableDnsHostnames={'Value': True}
+)
+
+print("VPC Created:", vpc.id)
+
+# Create Internet Gateway
+print("Creating Internet Gateway...")
+
+igw = ec2.create_internet_gateway()
+
+vpc.attach_internet_gateway(
+    InternetGatewayId=igw.id
+)
+
+print("IGW Created:", igw.id)
+
+# Create Subnet
+print("Creating Subnet...")
+
+subnet = vpc.create_subnet(
+    CidrBlock='10.0.1.0/24',
+    AvailabilityZone='ap-south-1a'
+)
+
+subnet.meta.client.modify_subnet_attribute(
+    SubnetId=subnet.id,
+    MapPublicIpOnLaunch={'Value': True}
+)
+
+print("Subnet Created:", subnet.id)
+
+# Create Route Table
+print("Creating Route Table...")
+
+route_table = vpc.create_route_table()
+
+route_table.create_route(
+    DestinationCidrBlock='0.0.0.0/0',
+    GatewayId=igw.id
+)
+
+route_table.associate_with_subnet(
+    SubnetId=subnet.id
+)
+
+print("Route Table Configured")
+
+# Create Security Group
+print("Creating Security Group...")
+
+sg = vpc.create_security_group(
+    GroupName='demo-sg',
+    Description='Allow SSH Access'
+)
+
+sg.authorize_ingress(
+    IpPermissions=[
+        {
+            'IpProtocol': 'tcp',
+            'FromPort': 22,
+            'ToPort': 22,
+            'IpRanges': [
+                {'CidrIp': '0.0.0.0/0'}
+            ]
+        }
+    ]
+)
+
+print("Security Group:", sg.id)
+
+# Launch EC2 Instance
+print("Launching EC2...")
+
+instance = ec2.create_instances(
+    ImageId=AMI_ID,
+    InstanceType='t2.micro',
+    KeyName=KEY_NAME,
+    MinCount=1,
+    MaxCount=1,
+    NetworkInterfaces=[
+        {
+            'SubnetId': subnet.id,
+            'DeviceIndex': 0,
+            'AssociatePublicIpAddress': True,
+            'Groups': [sg.id]
+        }
+    ]
+)
+
+ec2_instance = instance[0]
+
+print("EC2 Instance Created:", ec2_instance.id)
+
+print("Provisioning Completed Successfully")
